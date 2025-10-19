@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>186 Studios — AI Solutions Quote Builder</title>
+  <style>
+    :root{
+      --bg:#0f1115; --panel:#151923; --ink:#e7e9ee; --muted:#9aa3b2; --accent:#14b8a6; --bad:#d66; --ok:#6ad; --warn:#e7b44a;
+      --card:#1a2030; --line:#252b3a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color:var(--ink); background:linear-gradient(180deg, #0f1115, #0b0d12);
+    }
+    header{
+      padding:24px 20px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(15,17,21,.85); backdrop-filter:saturate(1.2) blur(8px); z-index:10;
+    }
+    .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
+    main{padding:32px 0;}
+    h1{font-size:1.4rem; margin:0; color:var(--ink);}
+    h1 .brand{font-weight:300; opacity:.8;}
+    h2{font-size:1.2rem; margin:0 0 16px;}
+    .grid{display:grid; grid-template-columns:1fr 320px; gap:40px; align-items:flex-start;}
+    .panel{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:24px; margin-bottom: 24px;}
+    
+    .accent-card { 
+      border-left: 3px solid var(--accent); 
+    }
+    .accent-card > h2 { 
+      color: var(--accent); 
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 16px;
+    }
+    .accent-card .prop-desc { 
+      font-size: 0.9rem; 
+      color: var(--muted); 
+      margin-top: -8px;
+      margin-bottom: 16px; 
+    }
+
+    label{display:block; font-weight:600; font-size:.9rem; margin-bottom:8px;}
+    select, input[type=text], input[type=email] {
+      width:100%; padding:10px; border-radius:4px; background:var(--bg); color:var(--ink);
+      border:1px solid var(--line); font-size:1rem;
+    }
+    .tiers{display:flex; gap:12px; margin-bottom:24px;}
+    .tier{flex:1; padding:16px; border:2px solid var(--card); border-radius:6px; cursor:pointer; transition:all .2s ease;}
+    .tier.selected{border-color:var(--accent); background:rgba(20, 184, 166, .1);}
+    .tier h3{margin:0 0 8px; font-size:1rem; color:var(--ink);}
+    .tier .price{font-size:1.2rem; font-weight:bold; color:var(--accent);}
+    .tier p{font-size:.8rem; margin:0; color:var(--muted); line-height:1.5;}
+
+    .item{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);}
+    .item:last-child{border:0;}
+    .item label{margin:0; display:flex; align-items:center; font-weight:normal;}
+    .item input[type=checkbox], .item input[type=radio]{margin-right:12px; width:18px; height:18px; accent-color:var(--accent);}
+    .item .price{font-weight:600;}
+    .item .unit{font-size:.8rem; color:var(--muted); margin-left:4px;}
+
+    .var-item{display:flex; align-items:center; justify-content:space-between;}
+    .var-item .var-label{flex:1;}
+    .var-item input[type=number]{width:70px; margin-left:12px; padding:8px; border-radius:4px; background:var(--bg); color:var(--ink); border:1px solid var(--line); text-align:right;}
+
+    #summary{position:sticky; top:120px;}
+    #summary .price-lg{font-size:2.5rem; font-weight:bold; color:var(--accent); text-align:right;}
+    #summary .muted{color:var(--muted);}
+    .breakdown-row{display:flex; justify-content:space-between; margin-bottom:8px; font-size:.9rem;}
+    .right{text-align:right;}
+    hr{border:0; border-top:1px solid var(--line); margin:16px 0;}
+    .actions{display:grid; grid-template-columns:1fr; gap:12px; margin-top:24px;}
+    .actions .secondary-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    button{
+      padding:12px; border-radius:4px; border:0; background:var(--accent); color:#fff; font-size:1rem; cursor:pointer;
+      font-weight:600;
+    }
+    button.sec{background:var(--card); color:var(--ink); border:1px solid var(--line);}
+    input.client-info{margin-bottom:8px;}
+
+    .slider-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    input[type=range] { width: 100%; }
+    .rag-source-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 16px; }
+    .rag-source-block { background: var(--bg); padding: 12px; border-radius: 6px; }
+    .rag-source-block label { font-size: 0.8rem; }
+    .rag-source-block select, .rag-source-block input { font-size: 0.9rem; padding: 8px; }
+    .warning-message { color: var(--warn); font-size: 0.8rem; margin-top: 8px; display: none; }
+
+    .tooltip-container { position: relative; display: inline-flex; align-items: center; }
+    .tooltip-icon { font-size: 0.8rem; margin-left: 6px; color: var(--muted); border: 1px solid var(--muted); border-radius: 50%; width: 16px; height: 16px; display: inline-flex; justify-content: center; align-items: center; cursor: help; }
+    .tooltip-text { visibility: hidden; width: 280px; background-color: var(--card); color: var(--ink); text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -140px; opacity: 0; transition: opacity 0.3s; font-size: 0.85rem; line-height: 1.4; border: 1px solid var(--line); }
+    .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+    
+    .usp-note { background: rgba(20, 184, 166, .1); border: 1px solid var(--accent); border-radius: 6px; padding: 12px; margin-top: 16px; font-size: 0.85rem; line-height: 1.5; }
+    .usp-note strong { color: var(--accent); }
+
+    #quote-preview ul { list-style: none; padding: 0; margin: 0; }
+    #quote-preview li { padding: 4px 0; font-size: 0.9rem; color: var(--muted); }
+    #quote-preview .category-title { font-weight: bold; color: var(--ink); margin-top: 8px; }
+
+
+    @media(max-width:800px){
+      .grid{grid-template-columns:1fr;}
+      #summary{position:static; margin-top:32px;}
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="wrap">
+      <h1><span class="brand">186 Studios /</span> AI Solutions Quote Builder</h1>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="grid">
+        <div class="options">
+          <div class="panel accent-card">
+            <h2>Base Configuration</h2>
+            <div>
+              <label for="complexity">Project Complexity</label>
+              <select id="complexity"></select>
+            </div>
+
+            <label style="margin-top: 24px;">Select Service Tier</label>
+            <div id="tiers" class="tiers"></div>
+          </div>
+
+          <div id="proprietary-solutions-container"></div>
+          <div id="rag-build-container"></div>
+          <div id="addons-container"></div>
+          <div id="retainers-container"></div>
+        </div>
+
+        <div id="summary" class="summary">
+          <div class="panel accent-card">
+            <h2>Quote Summary</h2>
+            <div class="client-details" style="margin-bottom:16px;">
+              <label for="clientName">Your Info</label>
+              <input type="text" id="clientName" class="client-info" placeholder="Full Name">
+              <input type="text" id="clientCompany" class="client-info" placeholder="Company Name">
+              <input type="email" id="clientEmail" class="client-info" placeholder="Email Address">
+            </div>
+            <hr>
+            <div class="breakdown-row">
+              <span>Subtotal</span>
+              <span id="subtotal" class="price">$0</span>
+            </div>
+            <div class="breakdown-row">
+              <span><label for="adjustmentCode" style="margin:0; font-weight:normal;">AC#</label></span>
+              <span><input type="text" id="adjustmentCode" style="width: 80px; text-align: right; padding: 4px 8px; font-size: .9rem;" placeholder="Code"></span>
+            </div>
+            <div id="discountRow" class="breakdown-row muted" style="display: none;">
+              <span>Discount</span>
+              <span id="discountAmt" class="price">-$0</span>
+            </div>
+            <div class="breakdown-row muted">
+              <span>Complexity (<span id="complexityLabel"></span>)</span>
+              <span id="complexityAmt" class="price">$0</span>
+            </div>
+             <div class="breakdown-row muted">
+              <span>Timeline (<span id="timelineLabel"></span>)</span>
+              <span id="timelineAmt" class="price">$0</span>
+            </div>
+            <hr>
+            <div class="breakdown-row">
+              <strong>Total</strong>
+              <strong id="total" class="price-lg">$0</strong>
+            </div>
+            <div class="breakdown-row muted">
+              <span>Monthly Retainer</span>
+              <span id="monthly" class="price">$0</span>
+            </div>
+            <hr>
+            <div id="payment-schedule-container">
+                <h3 style="font-size:1rem; margin:16px 0 8px; color:var(--muted);">Payment Schedule</h3>
+                <select id="paymentPlan" style="margin-bottom: 12px;">
+                    <option value="standard">Standard Plan (50/40/10)</option>
+                    <option value="planned">Equal Monthly Payments</option>
+                </select>
+                <div id="payment-slider-container" style="display: none;">
+                    <div class="slider-label"><span>Months</span><span id="payment-months-value">3</span></div>
+                    <input type="range" id="paymentMonths" min="2" max="12" value="3">
+                </div>
+                <div id="paymentSchedule"></div>
+            </div>
+            <div class="actions">
+              <button id="submitBtn">Send for Review</button>
+              <div class="secondary-actions">
+                <button id="printBtn" class="sec">Print</button>
+                <button id="copyBtn" class="sec">Copy</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel accent-card" style="margin-top: -1px; border-radius: 8px;">
+             <h2 style="font-size: 1.2rem; margin-bottom: 16px;">Timeline</h2>
+             <select id="timeline"></select>
+          </div>
+          <div id="quote-preview" class="panel accent-card" style="margin-top: -1px; border-radius: 8px;">
+             <h2 style="font-size: 1.2rem; margin-bottom: 16px;">Your Selections</h2>
+             <div id="preview-list">Select an option to see your project build out.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+
+    // NOTE FOR DEMO: Hardcoded discount codes. In a real application, this should be handled server-side.
+    const DISCOUNT_CODES = { "WELCOME10": 0.10, "PARTNER20": 0.20, "VIP": 0.50 };
+
+    const CSV_DATA = `
+Category,Item,Price,Unit,Type,Description,Tooltip
+Service Tiers,Launchpad,3500,Fixed,Base,"Ideal for proofs-of-concept, single-task automation tools, or foundational local LLM setup.",
+Service Tiers,Accelerator,9000,Fixed,Base,"For integrated solutions like a RAG model on a clean dataset or a suite of automation tools for a department.",
+Service Tiers,Enterprise,25000,Fixed,Base,"Complex, mission-critical systems: production RAG with multiple data sources, fine-tuning, and a web portal.",
+Proprietary Solutions,The ""Apollo"" Problem Solver,15000,,Toggle,"A comprehensive, end-to-end diagnostic and solution-generation engine for complex business challenges.",
+Proprietary Solutions,The ""Policy Expert"",12000,,Toggle,"An AI agent trained to master vast libraries of policy, compliance, or legal documents for instant, accurate querying.",
+Custom RAG Model Builds,RAG Foundation Package,8000,,Toggle,"Core RAG pipeline setup, including vectorization and retrieval for up to 3 data sources.","RAG stands for Retrieval-Augmented Generation. It's a technique for giving AI models access to your private data."
+Custom RAG Model Builds,Additional Data Connector,500,Per Source,Slider,"Connect and process an additional data source (PDFs, URLs, DBs).",
+Custom RAG Model Builds,Advanced Data Preprocessing,2500,,Toggle,"Custom scripts for intensive data cleaning, structuring, and optimized chunking strategies.","Ensures your data is perfectly formatted for the AI, which significantly improves the quality of its answers."
+Custom RAG Model Builds,Cloud Vector DB Setup,1500,,Toggle,"Deploy and manage the RAG system on a scalable cloud vector database (e.g., Pinecone).","Sets up a specialized, high-performance database in the cloud, designed to store and search your data for the AI."
+Custom RAG Model Builds,Hybrid Search Implementation,2000,,Toggle,"Integrate keyword-based search with vector search for improved retrieval accuracy.","Combines traditional keyword search with modern AI search to ensure no relevant information is missed."
+Custom RAG Model Builds,Re-ranking Model Integration,1800,,Toggle,"Add a cross-encoder re-ranking step to significantly boost document relevance.","An extra quality-control step where a second AI model double-checks the search results to find the absolute best answer."
+Complexity Multipliers,Standard,1.0x,Multiplier,Modifier,"Standard project scope with well-defined requirements and clean data.",
+Complexity Multipliers,Advanced,1.5x,Multiplier,Modifier,"Requires significant data cleaning, complex logic, or integration with multiple systems. Applies a 50% surcharge.",
+Complexity Multipliers,Expert,2.0x,Multiplier,Modifier,"Involves novel research, experimental models, or highly complex data structures. Applies a 100% surcharge.",
+Timeline Multipliers,Standard (3-5 weeks),1.0x,Multiplier,Modifier,No additional charge,
+Timeline Multipliers,Rush (1-2 weeks),1.3x,Multiplier,Modifier,30% surcharge applied to total for expedited delivery,
+Add-On Services: AI Development,Model Fine-Tuning (PEFT/LoRA),4000,,Toggle,"Perform Parameter-Efficient Fine-Tuning on a foundational model with your custom dataset for specialized tasks.","A process that efficiently teaches a powerful, general AI model to become a specialist in your specific data or task."
+Add-On Services: AI Development,Custom UI / Web Portal,3000,,Toggle,"Build a custom web-based interface (chatbot, RAG front-end) for interacting with the AI model.",
+Add-On Services: AI Development,AI Persona Development Package,750,,Toggle,"Craft a detailed and consistent persona, voice, and role for your AI model.","Defines the AI's personality, communication style, and expertise to ensure it always stays on-brand and helpful."
+Add-On Services: AI Development,Safety & Instruction Guardrails,600,,Toggle,"Implement a robust set of rules and constraints to ensure safe and reliable outputs.","Builds the unbreakable rules for the AI, such as 'NEVER give financial advice' or 'ALWAYS cite your sources'."
+Add-On Services: AI Development,Structured Data Output (JSON/XML),1200,,Toggle,"Force the model to reliably output clean, machine-readable data for easy integration.","This is critical for connecting the AI's output to other software, websites, or internal tools."
+Add-On Services: AI Development,Complex Reasoning (Chain-of-Thought),900,,Toggle,"Implement multi-step logic to improve accuracy on complex tasks.","Engineers the AI to 'think step-by-step' before giving an answer, dramatically improving its accuracy and reasoning."
+Add-On Services: AI Development,API / Tool Integration Blueprint,1800,,Toggle,"Design the prompt architecture for connecting the LLM to external tools and APIs.","This gives the AI 'hands' to perform actions, like sending an email, checking a database, or accessing live data."
+Add-On Services: AI Development,Advanced RAG Synthesizer Prompt,1000,,Toggle,"Craft an advanced prompt to instruct the model on how to best use retrieved documents.","This prompt teaches the AI how to read, understand, and synthesize the information it finds in your documents."
+Add-On Services: Training & Consulting,1-Hour Group Training Session,1200,,Toggle,"On-site or remote training for groups (10-100 people) on AI concepts, tools, and applications.",
+Add-On Services: Training & Consulting,Half-Day Strategy Workshop,3000,,Toggle,"An intensive workshop for small teams (<10) to define an AI strategy and roadmap.",
+Add-On Services: Training & Consulting,30-Min Quick Consult Call,150,,Variable,"A quick, focused consultation call for specific questions or guidance (1-10 calls).",
+Add-On Services: Training & Consulting,Hourly Consulting,275,Per Hour,Variable,"General consulting on AI strategy, implementation, and problem-solving (0-20 hours).",
+Add-On Services: Hardware & Deployment,Starter AI Rig (Labor Fee),500,,Toggle,"Labor for building a PC with mid-range AI components. Client covers parts cost.",
+Add-On Services: Hardware & Deployment,Pro AI Workstation (Labor Fee),850,,Toggle,"Labor for a high-end build with advanced components and cooling. Client covers parts cost.",
+Add-On Services: Hardware & Deployment,Elite AI Powerhouse (Labor Fee),1350,,Toggle,"White-glove labor for an enthusiast-grade build with custom loops and extensive testing. Client covers parts cost.",
+Add-On Services: Hardware & Deployment,Local LLM Deployment & Training,750,,Toggle,"Setup of local LLM software (LM Studio, Ollama) on client hardware, including 1 hour of user training.",
+Add-On Services: Additional Items,Data Cleaning & Preparation,125,Per Hour,Variable,"Manual and automated data cleaning, formatting, and preparation for use in RAG or fine-tuning (0-40 hours).",
+AI Support Retainers,None,0,Monthly,Recurring,"No ongoing support.",
+AI Support Retainers,Basic Support,250,Monthly,Recurring,"System monitoring, priority email support, and monthly industry news updates.",
+AI Support Retainers,Pro Support,750,Monthly,Recurring,"Includes Basic, plus minor model updates, data source refreshes, and monthly performance reports.",
+AI Support Retainers,Performance Retainer,2000,Monthly,Recurring,"Includes Pro, plus proactive model tuning, performance optimization, and a monthly strategy call.",
+Payment Schedule,Deposit,0.5,Percentage,Schedule,On acceptance,
+Payment Schedule,Mid-Project Milestone,0.4,Percentage,Schedule,"On completion of development phase, before final deployment.",
+Payment Schedule,Final,0.1,Percentage,Schedule,On project completion and hand-off,
+`;
+
+    let PRICING = {};
+    let state = {
+      tier: 0,
+      complexity: 0,
+      timeline: 0,
+      addons: {},
+      vars: {},
+      ragSlider: 0,
+      retainer: 0,
+      paymentPlan: 'standard',
+      paymentMonths: 3
+    };
+
+    const fmt = val => val.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+    function parseData() {
+      const text = CSV_DATA;
+      const rows = text.split('\n').slice(1).map(row => row.trim().replace(/""/g, '"')).filter(Boolean);
+      PRICING = {
+        tiers: [],
+        proprietary: [],
+        rag: [],
+        complexity: [],
+        timeline: [],
+        addons: {},
+        retainers: [],
+        schedule: []
+      };
+      rows.forEach(row => {
+        const parts = row.split(',');
+        const [cat, item, price, unit, type, desc] = parts;
+        const tooltip = parts.length > 6 ? parts.slice(6).join(',') : ''; // Handle commas in tooltip
+        const entry = { label: item.replace(/"/g, ''), price: parseFloat(price) || 0, unit, type, desc: desc.replace(/"/g, ''), tooltip: tooltip.replace(/"/g, '') };
+        
+        if (cat === 'Service Tiers') PRICING.tiers.push(entry);
+        else if (cat === 'Proprietary Solutions') PRICING.proprietary.push(entry);
+        else if (cat === 'Custom RAG Model Builds') PRICING.rag.push(entry);
+        else if (cat === 'Complexity Multipliers') PRICING.complexity.push({ label: item, val: parseFloat(price) });
+        else if (cat === 'Timeline Multipliers') PRICING.timeline.push({ label: item, val: parseFloat(price) });
+        else if (cat.startsWith('Add-On Services')) {
+            const group = cat.split(': ')[1];
+            if (!PRICING.addons[group]) PRICING.addons[group] = [];
+            PRICING.addons[group].push(entry);
+        }
+        else if (cat === 'AI Support Retainers') PRICING.retainers.push(entry);
+        else if (cat === 'Payment Schedule') PRICING.schedule.push({ label: item, val: parseFloat(price) });
+      });
+    }
+
+    function createLabelWithTooltip(item) {
+        if (item.tooltip) {
+            return `<span class="tooltip-container">${item.label}<span class="tooltip-icon">?</span><span class="tooltip-text">${item.tooltip}</span></span>`;
+        }
+        return item.label;
+    }
+
+    function renderTiers() {
+      $('#tiers').innerHTML = PRICING.tiers.map((tier, i) => `
+        <div class="tier ${i === state.tier ? 'selected' : ''}" data-id="${i}">
+          <h3>${tier.label}</h3>
+          <p class="price">${fmt(tier.price)}</p>
+          <p>${tier.desc}</p>
+        </div>
+      `).join('');
+      $$('#tiers .tier').forEach(el => el.addEventListener('click', e => {
+        state.tier = parseInt(e.currentTarget.dataset.id);
+        renderTiers();
+        compute();
+      }));
+    }
+
+    function renderProprietarySolutions() {
+        let html = '';
+        if (PRICING.proprietary && PRICING.proprietary.length > 0) {
+            html += `<div class="panel accent-card"><h2>Proprietary Solutions</h2>`;
+            html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">`;
+            PRICING.proprietary.forEach((item, i) => {
+                const id = `prop-${i}`;
+                html += `
+                <div class="panel" style="margin-bottom: 0; background-color: var(--bg);">
+                    <h3 style="color: var(--ink); margin-top: 0;">${item.label}</h3>
+                    <p class="prop-desc" style="margin-top: 8px;">${item.desc}</p>
+                    <div class="item">
+                        <label for="${id}"><input type="checkbox" id="${id}" data-label="${item.label}"> Add to Quote</label>
+                        <span class="price">${fmt(item.price)}</span>
+                    </div>
+                </div>`;
+            });
+            html += `</div></div>`;
+        }
+        $('#proprietary-solutions-container').innerHTML = html;
+        $$('#proprietary-solutions-container input').forEach(el => el.addEventListener('input', e => {
+            const { label } = e.target.dataset;
+            state.addons[label] = e.target.checked;
+            compute();
+        }));
+    }
+
+    function renderRagSourceInputs(count) {
+        const container = $('#rag-sources-details');
+        container.innerHTML = '';
+        if (count > 0) {
+            let html = '';
+            for (let i = 1; i <= count; i++) {
+                html += `
+                <div class="rag-source-block">
+                    <label for="rag-source-type-${i}">Source ${i} Type</label>
+                    <select id="rag-source-type-${i}" class="rag-source-type">
+                        <option>PDF</option><option>DOCX</option><option>Website URL</option><option>Database</option><option>Other</option>
+                    </select>
+                    <label for="rag-source-pages-${i}" style="margin-top:8px;">Page Count</label>
+                    <input type="number" id="rag-source-pages-${i}" class="rag-source-pages" value="0" min="0">
+                </div>`;
+            }
+            container.innerHTML = html;
+            $$('.rag-source-pages').forEach(el => el.addEventListener('input', compute));
+        }
+    }
+
+    function renderRagBuilder() {
+        let html = '';
+        if (PRICING.rag && PRICING.rag.length > 0) {
+            html += `<div class="panel accent-card"><h2>Custom RAG Model Build</h2>`;
+            PRICING.rag.forEach((item, i) => {
+                const id = `rag-${i}`;
+                const labelWithTooltip = createLabelWithTooltip(item);
+                if (item.type === 'Toggle') {
+                    html += `<div class="item"><label for="${id}"><input type="checkbox" id="${id}" data-label="${item.label}"> ${labelWithTooltip}</label><span class="price">${fmt(item.price)}</span></div>`;
+                } else if (item.type === 'Slider') {
+                    html += `
+                    <div class="slider-item">
+                        <div class="slider-label"><span>${labelWithTooltip}</span><span id="rag-slider-value">0</span></div>
+                        <input type="range" id="rag-sources-slider" data-label="${item.label}" min="0" max="10" value="0">
+                        <div id="rag-sources-details" class="rag-source-details"></div>
+                        <div class="warning-message" id="rag-warning">Additional costs may apply based on document complexity and total page count.</div>
+                    </div>`;
+                } else if (item.type === 'Variable') {
+                    html += `<div class="item var-item"><span class="var-label">${labelWithTooltip}</span><input type="number" id="${id}" data-label="${item.label}" value="0" min="0" max="100"><span class="price"><span class="unit">${fmt(item.price)} ${item.unit}</span></span></div>`;
+                }
+            });
+            html += `</div>`;
+        }
+        $('#rag-build-container').innerHTML = html;
+        $$('#rag-build-container input').forEach(el => el.addEventListener('input', e => {
+            const { label } = e.target.dataset;
+            if (e.target.type === 'checkbox') {
+                state.addons[label] = e.target.checked;
+            } else if (e.target.type === 'range') {
+                state.ragSlider = parseInt(e.target.value, 10);
+                $('#rag-slider-value').textContent = state.ragSlider;
+                renderRagSourceInputs(state.ragSlider);
+            } else {
+                state.vars[label] = parseInt(e.target.value) || 0;
+            }
+            compute();
+        }));
+    }
+
+    function renderAddons() {
+        let html = '';
+        for (const group in PRICING.addons) {
+            html += `<div class="panel addon-panel accent-card"><h2>${group} Services</h2>`;
+            PRICING.addons[group].forEach((item, i) => {
+                const id = `${group.replace(/\s+/g, '-')}-${i}`;
+                const labelWithTooltip = createLabelWithTooltip(item);
+                if (item.type === 'Toggle') {
+                    html += `<div class="item"><label for="${id}"><input type="checkbox" id="${id}" data-group="${group}" data-label="${item.label}"> ${labelWithTooltip}</label><span class="price">${fmt(item.price)}</span></div>`;
+                } else if (item.type === 'Variable') {
+                    html += `<div class="item var-item"><span class="var-label">${labelWithTooltip}</span><input type="number" id="${id}" data-group="${group}" data-label="${item.label}" value="0" min="0" max="100"><span class="price"><span class="unit">${fmt(item.price)} ${item.unit}</span></span></div>`;
+                }
+            });
+            html += '</div>';
+        }
+        $('#addons-container').innerHTML = html;
+        $$('#addons-container input').forEach(el => el.addEventListener('input', e => {
+            const { label } = e.target.dataset;
+            if (e.target.type === 'checkbox') {
+                state.addons[label] = e.target.checked;
+            } else {
+                state.vars[label] = parseInt(e.target.value) || 0;
+            }
+            compute();
+        }));
+    }
+
+    function renderRetainers() {
+        let html = '';
+        if (PRICING.retainers && PRICING.retainers.length > 0) {
+            html += `<div class="panel accent-card"><h2>AI Support Retainers</h2>`;
+            PRICING.retainers.forEach((item, i) => {
+                const id = `retainer-${i}`;
+                html += `
+                <div class="item">
+                    <label for="${id}">
+                        <input type="radio" id="${id}" name="retainer" value="${i}" ${i === state.retainer ? 'checked' : ''}>
+                        <div>${item.label}<p style="font-size:0.8rem; color:var(--muted); margin: 4px 0 0;">${item.desc}</p></div>
+                    </label>
+                    <span class="price">${fmt(item.price)}/mo</span>
+                </div>`;
+            });
+            html += `<div class="usp-note"><strong>Our Fair-Use Policy:</strong> Our retainers are different. If you don't use the service in a given month, you're not billed. You only pay for the value you receive, eliminating subscription anxiety.</div>`;
+        }
+        html += '</div>';
+        $('#retainers-container').innerHTML = html;
+        $$('input[name="retainer"]').forEach(el => el.addEventListener('change', e => {
+            state.retainer = parseInt(e.target.value);
+            compute();
+        }));
+    }
+
+    function renderSelectors() {
+        $('#complexity').innerHTML = PRICING.complexity.map((o, i) => `<option value="${i}">${o.label}</option>`).join('');
+        $('#timeline').innerHTML = PRICING.timeline.map((o, i) => `<option value="${i}">${o.label}</option>`).join('');
+    }
+
+    function compute() {
+      let subtotal = PRICING.tiers[state.tier].price;
+
+      // Add proprietary solutions
+      PRICING.proprietary.forEach(item => { if (state.addons[item.label]) subtotal += item.price; });
+      
+      // Add RAG builder items
+      let totalPageCount = 0;
+      let singleSourceLimitExceeded = false;
+      $$('.rag-source-pages').forEach(input => {
+          const pages = parseInt(input.value, 10) || 0;
+          if (pages > 500) singleSourceLimitExceeded = true;
+          totalPageCount += pages;
+      });
+      const totalSourceLimitExceeded = totalPageCount > 4000;
+      $('#rag-warning').style.display = (singleSourceLimitExceeded || totalSourceLimitExceeded) ? 'block' : 'none';
+      PRICING.rag.forEach(item => {
+          if (item.type === 'Toggle' && state.addons[item.label]) subtotal += item.price;
+          else if (item.type === 'Slider') subtotal += item.price * state.ragSlider;
+          else if (item.type === 'Variable' && state.vars[item.label]) subtotal += item.price * state.vars[item.label];
+      });
+
+      // Calculate add-ons from ALL groups
+      for (const group in PRICING.addons) {
+          PRICING.addons[group].forEach(item => {
+              if (item.type === 'Toggle' && state.addons[item.label]) subtotal += item.price;
+              else if (item.type === 'Variable' && state.vars[item.label]) subtotal += item.price * state.vars[item.label];
+          });
+      }
+      
+      const complexity = PRICING.complexity[state.complexity];
+      const timeline = PRICING.timeline[state.timeline];
+      
+      const discountCode = $('#adjustmentCode').value.trim().toUpperCase();
+      const discountPercent = DISCOUNT_CODES[discountCode] || 0;
+      const discountAmt = subtotal * discountPercent;
+      
+      $('#discountRow').style.display = discountAmt > 0 ? 'flex' : 'none';
+      $('#discountAmt').textContent = `-${fmt(discountAmt)}`;
+      
+      const subtotalAfterDiscount = subtotal - discountAmt;
+      const complexityAmt = (subtotalAfterDiscount * complexity.val) - subtotalAfterDiscount;
+      let total = subtotalAfterDiscount + complexityAmt;
+
+      const timelineAmt = (total * timeline.val) - total;
+      total += timelineAmt;
+      
+      const monthly = PRICING.retainers[state.retainer].price;
+
+      $('#subtotal').textContent = fmt(subtotal);
+      $('#complexityLabel').textContent = complexity.label;
+      $('#complexityAmt').textContent = fmt(complexityAmt);
+      $('#timelineLabel').textContent = timeline.label;
+      $('#timelineAmt').textContent = fmt(timelineAmt);
+      $('#total').textContent = fmt(total);
+      $('#monthly').textContent = fmt(monthly) + '/mo';
+      
+      renderPaymentSchedule(total);
+      renderQuotePreview();
+    }
+    
+    function renderPaymentSchedule(total) {
+        let html = '';
+        if (state.paymentPlan === 'standard') {
+            html = PRICING.schedule.map(p => {
+                const amt = total * p.val;
+                return `<div class="breakdown-row"><span>${p.label} (${p.val*100}%)</span> <span class="right price">${fmt(amt)}</span></div>`;
+            }).join('');
+        } else {
+            const monthlyPayment = total / state.paymentMonths;
+            for (let i = 1; i <= state.paymentMonths; i++) {
+                html += `<div class="breakdown-row"><span>Month ${i} Payment</span> <span class="right price">${fmt(monthlyPayment)}</span></div>`;
+            }
+        }
+        $('#paymentSchedule').innerHTML = html;
+    }
+
+    function renderQuotePreview() {
+        let html = '<ul>';
+        let hasSelections = false;
+
+        const baseTier = PRICING.tiers[state.tier];
+        html += `<li class="category-title">Base Tier</li><li>${baseTier.label}</li>`;
+        hasSelections = true;
+
+        const proprietarySelections = PRICING.proprietary.filter(item => state.addons[item.label]);
+        if (proprietarySelections.length > 0) {
+            html += `<li class="category-title">Proprietary Solutions</li>`;
+            proprietarySelections.forEach(item => { html += `<li>${item.label}</li>`; });
+        }
+        
+        const ragSelections = PRICING.rag.filter(item => (item.type === 'Toggle' && state.addons[item.label]) || (item.type === 'Slider' && state.ragSlider > 0) || (item.type === 'Variable' && state.vars[item.label]));
+        if (ragSelections.length > 0) {
+            html += `<li class="category-title">RAG Model Build</li>`;
+            ragSelections.forEach(item => { html += `<li>${item.label} ${item.type === 'Slider' ? `(x${state.ragSlider})` : ''}</li>`; });
+        }
+
+        for (const group in PRICING.addons) {
+            const groupSelections = PRICING.addons[group].filter(item => (item.type === 'Toggle' && state.addons[item.label]) || (item.type === 'Variable' && state.vars[item.label] > 0));
+            if (groupSelections.length > 0) {
+                html += `<li class="category-title">${group}</li>`;
+                groupSelections.forEach(item => { html += `<li>${item.label} ${item.type === 'Variable' ? `(x${state.vars[item.label]})` : ''}</li>`; });
+            }
+        }
+
+        html += '</ul>';
+        $('#preview-list').innerHTML = hasSelections ? html : 'Select an option to see your project build out.';
+    }
+
+    function getSummaryText() {
+        let summaryText = `AI Solutions Quote Request from: ${$('#clientName').value || 'N/A'}\n`;
+        summaryText += `Company: ${$('#clientCompany').value || 'N/A'} \nEmail: ${$('#clientEmail').value || 'N/A'}\n\n`;
+        summaryText += `Service Tier: ${PRICING.tiers[state.tier].label}\n\n`;
+        summaryText += '--- SELECTED SERVICES ---\n';
+        const previewHTML = $('#preview-list').innerText;
+        summaryText += previewHTML.replace(/^(.)/gm, '- $1');
+
+        summaryText += '\n\n--- QUOTE SUMMARY ---\n';
+        summaryText += `Subtotal: ${$('#subtotal').textContent}\n`;
+        if (DISCOUNT_CODES[$('#adjustmentCode').value.trim().toUpperCase()]) {
+             summaryText += `Discount: ${$('#discountAmt').textContent}\n`;
+        }
+        summaryText += `Complexity (${$('#complexityLabel').textContent}): ${$('#complexityAmt').textContent}\n`;
+        summaryText += `Timeline (${$('#timelineLabel').textContent}): ${$('#timelineAmt').textContent}\n`;
+        summaryText += `-------------------\n`;
+        summaryText += `ESTIMATED TOTAL: ${$('#total').textContent}\n`;
+        summaryText += `RETAINER: ${PRICING.retainers[state.retainer].label} (${$('#monthly').textContent})\n`;
+        return summaryText;
+    }
+
+    function setupListeners() {
+        $('#complexity').addEventListener('change', e => { state.complexity = parseInt(e.target.value); compute(); });
+        $('#timeline').addEventListener('change', e => { state.timeline = parseInt(e.target.value); compute(); });
+        $('#adjustmentCode').addEventListener('input', compute);
+        $('#paymentPlan').addEventListener('change', e => {
+            state.paymentPlan = e.target.value;
+            $('#payment-slider-container').style.display = state.paymentPlan === 'planned' ? 'block' : 'none';
+            compute();
+        });
+        $('#paymentMonths').addEventListener('input', e => {
+            state.paymentMonths = parseInt(e.target.value, 10);
+            $('#payment-months-value').textContent = state.paymentMonths;
+            compute();
+        });
+
+        $('#printBtn').addEventListener('click', () => window.print());
+        $('#copyBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(getSummaryText()).then(() => {
+                alert('Quote summary copied to clipboard.');
+            }, () => {
+                alert('Failed to copy summary.');
+            });
+        });
+        $('#submitBtn').addEventListener('click', () => {
+            const clientName = $('#clientName').value;
+            if (!clientName || !$('#clientEmail').value) {
+                alert('Please fill in your name and email before submitting.');
+                return;
+            }
+            const subject = `AI Quote Builder Request from ${clientName}`;
+            const body = getSummaryText();
+            // IMPORTANT: Replace 'youremail@186studios.com' with your actual email address.
+            window.location.href = `mailto:youremail@186studios.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        });
+    }
+
+    function init() {
+      parseData();
+      renderTiers();
+      renderProprietarySolutions();
+      renderRagBuilder();
+      renderAddons();
+      renderRetainers();
+      renderSelectors();
+      setupListeners();
+      compute();
+    }
+
+    init();
+  </script>
+</body>
+</html>
